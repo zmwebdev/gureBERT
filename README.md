@@ -39,9 +39,6 @@ python src/run_pretraining.py \
   --config_file eu.congif.ini \
   --input_file=corpus/eu/pretraining.tf.data \
   --output_dir=gureBERT/eu.gureBERT \
-  # --use_tpu=True \
-  # --tpu_name=Adress \
-  # --num_tpu_cores=8 \
   --do_train=True \
   --do_eval=True \
   --train_batch_size=256 \
