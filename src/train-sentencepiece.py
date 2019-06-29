@@ -28,7 +28,7 @@ def _get_text_file(text_dir=TEXTDIR):
 
 def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
     files = _get_text_file()
-    command = f'--input={files} --model_prefix={prefix} --vocab_size={vocab_size} --control_symbols={ctl_symbols}'
+    command = f'--input={files} --model_prefix={prefix} --vocab_size={vocab_size} --control_symbols={ctl_symbols} --hard_vocab_limit=false'
     sp.SentencePieceTrainer.Train(command)
 
 
