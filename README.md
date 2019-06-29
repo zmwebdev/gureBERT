@@ -19,7 +19,7 @@ Train a SentencePiece model using the preprocessed data.
 ```
 install -d spModels
 
-python3 src/train-sentencepiece.py --config eu.congif.ini
+python3 src/train-sentencepiece.py --config eu.config.ini
 ```
 
 ### Creating data for pretraining
@@ -40,7 +40,7 @@ You need GPU/TPU environment to pretrain a BERT model.
 install -d gureBERT
 
 python src/run_pretraining.py \
-  --config_file eu.congif.ini \
+  --config_file eu.config.ini \
   --input_file=corpus/eu/pretraining.tf.data \
   --output_dir=gureBERT/eu.gureBERT \
   --do_train=True \
