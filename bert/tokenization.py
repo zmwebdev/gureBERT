@@ -19,10 +19,60 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import re
 import unicodedata
 import six
 import tensorflow as tf
-import sentencepiece as spm
+
+
+def validate_case_matches_checkpoint(do_lower_case, init_checkpoint):
+  """Checks whether the casing config is consistent with the checkpoint name."""
+
+  # The casing has to be passed in by the user and there is no explicit check
+  # as to whether it matches the checkpoint. The casing information probably
+  # should have been stored in the bert_config.json file, but it's not, so
+  # we have to heuristically detect it to validate.
+
+  if not init_checkpoint:
+    return
+
+  m = re.match("^.*?([A-Za-z0-9_-]+)/bert_model.ckpt", init_checkpoint)
+  if m is None:
+    return
+
+  model_name = m.group(1)
+
+  lower_models = [
+      "uncased_L-24_H-1024_A-16", "uncased_L-12_H-768_A-12",
+      "multilingual_L-12_H-768_A-12", "chinese_L-12_H-768_A-12"
+  ]
+
+  cased_models = [
+      "cased_L-12_H-768_A-12", "cased_L-24_H-1024_A-16",
+      "multi_cased_L-12_H-768_A-12"
+  ]
+
+  is_bad_config = False
+  if model_name in lower_models and not do_lower_case:
+    is_bad_config = True
+    actual_flag = "False"
+    case_name = "lowercased"
+    opposite_flag = "True"
+
+  if model_name in cased_models and do_lower_case:
+    is_bad_config = True
+    actual_flag = "True"
+    case_name = "cased"
+    opposite_flag = "False"
+
+  if is_bad_config:
+    raise ValueError(
+        "You passed in `--do_lower_case=%s` with `--init_checkpoint=%s`. "
+        "However, `%s` seems to be a %s model, so you "
+        "should pass in `--do_lower_case=%s` so that the fine-tuning matches "
+        "how the model was pre-training. If this error is wrong, please "
+        "just comment out this check." % (actual_flag, init_checkpoint,
+                                          model_name, case_name, opposite_flag))
 
 
 def convert_to_unicode(text):
@@ -80,24 +130,27 @@ def load_vocab(vocab_file):
       token = token.strip()
       vocab[token] = index
       index += 1
-  for special_token in ['[PAD]','[UNK]','[CLS]','[SEP]','[MASK]']:
-    token = convert_to_unicode(special_token)
-    if token not in vocab:
-      vocab[token] = index
-      index += 1
   return vocab
 
 
+def convert_by_vocab(vocab, items):
+  """Converts a sequence of [tokens|ids] using the vocab."""
+  output = []
+  for item in items:
+    output.append(vocab[item])
+  return output
+
+
 def convert_tokens_to_ids(vocab, tokens):
-  """Converts a sequence of tokens into ids using the vocab."""
-  ids = []
-  for token in tokens:
-    ids.append(vocab[token])
-  return ids
+  return convert_by_vocab(vocab, tokens)
+
+
+def convert_ids_to_tokens(inv_vocab, ids):
+  return convert_by_vocab(inv_vocab, ids)
 
 
 def whitespace_tokenize(text):
-  """Runs basic whitespace cleaning and splitting on a peice of text."""
+  """Runs basic whitespace cleaning and splitting on a piece of text."""
   text = text.strip()
   if not text:
     return []
@@ -108,29 +161,25 @@ def whitespace_tokenize(text):
 class FullTokenizer(object):
   """Runs end-to-end tokenziation."""
 
-  def __init__(self, vocab_file, do_lower_case=True,
-               piece='word', piece_model=None):
+  def __init__(self, vocab_file, do_lower_case=True):
     self.vocab = load_vocab(vocab_file)
+    self.inv_vocab = {v: k for k, v in self.vocab.items()}
     self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case)
-    self.piece = piece
-    if self.piece == 'sentence':
-      self.sentencepiece_tokenizer = SentencePieceTokenizer(model=piece_model)
-    else: # Default to WordPiece
-      self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab)
+    self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab)
 
   def tokenize(self, text):
     split_tokens = []
-    if self.piece == 'sentence':
-      text = ' '.join(whitespace_tokenize(text))
-      split_tokens = self.sentencepiece_tokenizer.tokenize(text)
-    else:
-      for token in self.basic_tokenizer.tokenize(text):
-        for sub_token in self.wordpiece_tokenizer.tokenize(token):
-          split_tokens.append(sub_token)
+    for token in self.basic_tokenizer.tokenize(text):
+      for sub_token in self.wordpiece_tokenizer.tokenize(token):
+        split_tokens.append(sub_token)
+
     return split_tokens
 
   def convert_tokens_to_ids(self, tokens):
-    return convert_tokens_to_ids(self.vocab, tokens)
+    return convert_by_vocab(self.vocab, tokens)
+
+  def convert_ids_to_tokens(self, ids):
+    return convert_by_vocab(self.inv_vocab, ids)
 
 
 class BasicTokenizer(object):
@@ -248,25 +297,10 @@ class BasicTokenizer(object):
     return "".join(output)
 
 
-class SentencePieceTokenizer(object):
-  """Runs Google's SentencePiece tokenization."""
-  def __init__(self, model, unk_token="[UNK]"):
-    self.sp = spm.SentencePieceProcessor()
-    self.sp.Load(model)
-    self.unk_token = unk_token
-
-  def tokenize(self, text):
-    output_ids = self.sp.EncodeAsIds(text)
-    output_tokens = [convert_to_unicode(self.sp.IdToPiece(i))
-                    if i != 0 else self.unk_token
-                    for i in output_ids]
-    return output_tokens
-
-
 class WordpieceTokenizer(object):
   """Runs WordPiece tokenziation."""
 
-  def __init__(self, vocab, unk_token="[UNK]", max_input_chars_per_word=100):
+  def __init__(self, vocab, unk_token="[UNK]", max_input_chars_per_word=200):
     self.vocab = vocab
     self.unk_token = unk_token
     self.max_input_chars_per_word = max_input_chars_per_word
