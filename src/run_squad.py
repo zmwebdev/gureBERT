@@ -30,6 +30,7 @@ import tokenization_sentencepiece as tokenization
 import six
 import tensorflow as tf
 
+CURDIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(CURDIR, os.pardir, 'bert'))
 import modeling
 import optimization
