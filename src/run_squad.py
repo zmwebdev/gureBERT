@@ -22,6 +22,7 @@ import collections
 import json
 import math
 import os
+import sys
 import random
 
 import tokenization_sentencepiece as tokenization
