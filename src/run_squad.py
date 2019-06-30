@@ -23,12 +23,16 @@ import json
 import math
 import os
 import random
-import modeling
-import optimization
+
 import tokenization_sentencepiece as tokenization
 
 import six
 import tensorflow as tf
+
+sys.path.append(os.path.join(CURDIR, os.pardir, 'bert'))
+import modeling
+import optimization
+
 
 flags = tf.flags
 
