@@ -38,7 +38,7 @@ def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
     tokenizer = tokenization.BasicTokenizer(do_lower_case=True) #False?
 
     tokenak = []
-    with open('tokens.txt', 'w') as fw:
+    with open('tokens.txt', 'w', encoding='utf-8') as fw:
         for fs in files.split(","):
             with open(fs, 'r') as f:
                 for line in f:
