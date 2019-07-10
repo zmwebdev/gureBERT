@@ -48,6 +48,7 @@ def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
 
     files = 'tokens.txt'
 
+    # https://github.com/google/sentencepiece/blob/d4dd947fe71c4fa4ee24ad8297beee32887d8828/python/sentencepiece_python_module_example.ipynb
     # https://github.com/allenai/scibert/blob/5d72d0ec50e2d3ebe971122f8b282278c210eccd/scripts/cheatsheet.txt
     # spm.SentencePieceTrainer.Train('--input=combined.out --model_prefix=100B_9999_cased --vocab_size=31000 --character_coverage=0.9999 --model_type=bpe --input_sentence_size=100000000 --shuffle_input_sentence=true')
     command = f'--input={files} --model_prefix={prefix} --vocab_size={vocab_size} --control_symbols={ctl_symbols} --character_coverage=0.9999 --model_type=bpe --input_sentence_size=100000000 --shuffle_input_sentence=true'
