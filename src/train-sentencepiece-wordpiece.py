@@ -33,7 +33,7 @@ def _get_text_file(text_dir=TEXTDIR):
 
 def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
     files = _get_text_file()
-
+    print("files: {}".format(files))
     # pre-tokenization
     tokenizer = tokenization.BasicTokenizer(do_lower_case=True) #False?
 
@@ -42,6 +42,7 @@ def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
     for fs in files.split(","):
         filename = fs + ".tokenized"
         with open(filename, 'w', encoding='utf-8') as fw:
+            print("fs: {}".format(fs))
             with open(fs, 'r') as f:
                 for line in f:
                     tokenak = tokenizer.tokenize(line)
