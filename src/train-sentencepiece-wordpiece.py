@@ -38,15 +38,16 @@ def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
     tokenizer = tokenization.BasicTokenizer(do_lower_case=True) #False?
 
     tokenak = []
-    with open('tokens.txt', 'w', encoding='utf-8') as fw:
-        for fs in files.split(","):
+    files = ""  # comma separated files
+    for fs in files.split(","):
+        filename = fs + ".tokenized"
+        with open(filename, 'w', encoding='utf-8') as fw:
             with open(fs, 'r') as f:
                 for line in f:
                     tokenak = tokenizer.tokenize(line)
                     fw.write(" ".join([str(x) for x in tokenak]))
                     fw.write('\n')
-
-    files = 'tokens.txt'
+        files += "," + filename
 
     # https://github.com/google/sentencepiece/blob/d4dd947fe71c4fa4ee24ad8297beee32887d8828/python/sentencepiece_python_module_example.ipynb
     # https://github.com/allenai/scibert/blob/5d72d0ec50e2d3ebe971122f8b282278c210eccd/scripts/cheatsheet.txt
