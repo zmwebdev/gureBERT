@@ -32,6 +32,11 @@ def _get_text_file(text_dir=TEXTDIR):
     files = ",".join(file_list)
     return files
 
+def _get_tokenized_file(text_dir=TEXTDIR):
+    file_list = glob.glob(f'{text_dir}/*/*.*.tokenized')
+    files = ",".join(file_list)
+    return files
+
 def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS, tokenized=args.tokenized):
     
     # if files are tokenized
@@ -55,7 +60,7 @@ def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS, tokenized
             files_tokenized += "," + filename
     else:
         # files are tokenized
-        files_tokenized = _get_text_file(f'{text_dir}/*/*.tokenized')
+        files_tokenized = _get_tokenized_file()
 
     # https://github.com/google/sentencepiece/blob/d4dd947fe71c4fa4ee24ad8297beee32887d8828/python/sentencepiece_python_module_example.ipynb
     # https://github.com/allenai/scibert/blob/5d72d0ec50e2d3ebe971122f8b282278c210eccd/scripts/cheatsheet.txt
