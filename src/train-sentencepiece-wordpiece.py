@@ -9,6 +9,7 @@ import sys
 
 parser = argparse.ArgumentParser(description='sentencepiece')
 parser.add_argument('--config', required=True, type=str, help='config file')
+parser.add_argument('--tokenized', required=False, type=bool, help='files are tokenized')
 args = parser.parse_args()
 
 CURDIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,24 +32,30 @@ def _get_text_file(text_dir=TEXTDIR):
     files = ",".join(file_list)
     return files
 
-def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS):
-    files = _get_text_file()
-    print("files: {}".format(files))
-    # pre-tokenization
-    tokenizer = tokenization.BasicTokenizer(do_lower_case=True) #False?
+def train(prefix=PREFIX, vocab_size=VOCABSIZE, ctl_symbols=CTLSYMBOLS, tokenized=args.tokenized):
+    
+    # if files are tokenized
+    if not tokenized:
+        files = _get_text_file()
+        print("files: {}".format(files))
+        # pre-tokenization
+        tokenizer = tokenization.BasicTokenizer(do_lower_case=True) #False?
 
-    tokenak = []
-    files_tokenized = ""  # comma separated files
-    for fs in files.split(","):
-        filename = fs + ".tokenized"
-        with open(filename, 'w', encoding='utf-8') as fw:
-            print("fs: {}".format(fs))
-            with open(fs, 'r') as f:
-                for line in f:
-                    tokenak = tokenizer.tokenize(line)
-                    fw.write(" ".join([str(x) for x in tokenak]))
-                    fw.write('\n')
-        files_tokenized += "," + filename
+        tokenak = []
+        files_tokenized = ""  # comma separated files
+        for fs in files.split(","):
+            filename = fs + ".tokenized"
+            with open(filename, 'w', encoding='utf-8') as fw:
+                print("fs: {}".format(fs))
+                with open(fs, 'r') as f:
+                    for line in f:
+                        tokenak = tokenizer.tokenize(line)
+                        fw.write(" ".join([str(x) for x in tokenak]))
+                        fw.write('\n')
+            files_tokenized += "," + filename
+    else:
+        # files are tokenized
+        files_tokenized = _get_text_file(f'{text_dir}/*/*.tokenized')
 
     # https://github.com/google/sentencepiece/blob/d4dd947fe71c4fa4ee24ad8297beee32887d8828/python/sentencepiece_python_module_example.ipynb
     # https://github.com/allenai/scibert/blob/5d72d0ec50e2d3ebe971122f8b282278c210eccd/scripts/cheatsheet.txt
